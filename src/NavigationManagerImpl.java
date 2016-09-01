@@ -512,7 +512,7 @@ public class NavigationManagerImpl extends DataFlowComponentBase {
 	 */
 	//protected PathFollower m_pathFollower;
 
-    protected PathFollowerDecorator m_PathFollowerBaseDecorator = new PathFollowerDecorator();
+    protected PathFollowerDecorator m_PathFollowerBaseDecorator = new PathFollowerDecorator(this);
     protected PathFollower m_PathFollowerDecorator;
     
 	// </rtc-template>

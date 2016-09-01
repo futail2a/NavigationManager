@@ -14,15 +14,22 @@ import RTC.PathFollowerPOA;
 public class PathFollowerDecorator extends CorbaConsumer<PathFollower>{
 	
 	private CorbaConsumer<PathFollower> m_PathFollowerBase;
+	private NavigationManagerImpl impl;
 	
-	public PathFollowerDecorator(){
+	public PathFollowerDecorator(NavigationManagerImpl impl){
         System.out.println("Decorating Constructor called");
         this.m_PathFollowerBase = new CorbaConsumer<PathFollower>(PathFollower.class);
+        this.impl = impl;
 	}
 	public RTC.RETURN_VALUE followPath(RTC.Path2D path) {
+		RTC.RETURN_VALUE ret;
         System.out.println("Decorating followPath called");
     	m_PathFollowerBase.setObject(this.m_objref);
-        return  this.m_PathFollowerBase._ptr().followPath(path);
+    	ret = this.m_PathFollowerBase._ptr().followPath(path);
+        while(ret != RTC.RETURN_VALUE.RETVAL_OK){
+        	this.impl.refreshPath(path);
+        }
+    	return ret;
     }
 
     public RTC.RETURN_VALUE getState(RTC.FOLLOWER_STATEHolder state) {
