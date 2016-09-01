@@ -134,7 +134,7 @@ public class NavigationManagerImpl extends DataFlowComponentBase {
 		m_pathPlannerPort.registerConsumer("PathPlanner", "RTC::PathPlanner",
 				m_pathPlannerBase);
 		m_pathFollowerPort.registerConsumer("PathFollower",
-				"RTC::PathFollower", m_pathFollowerBase);
+				"RTC::PathFollower", m_PathFollowerBaseDecorator);
 
 		// Set CORBA Service Ports
 		addPort(m_mapperServicePort);
@@ -505,13 +505,16 @@ public class NavigationManagerImpl extends DataFlowComponentBase {
 	 * !
 	 */
 	protected PathPlanner m_pathPlanner;
-	protected CorbaConsumer<PathFollower> m_pathFollowerBase = new CorbaConsumer<PathFollower>(
-			PathFollower.class);
+	//protected CorbaConsumer<PathFollower> m_pathFollowerBase = new CorbaConsumer<PathFollower>(
+	//		PathFollower.class);
 	/*
 	 * !
 	 */
-	protected PathFollower m_pathFollower;
+	//protected PathFollower m_pathFollower;
 
+    protected PathFollowerDecorator m_PathFollowerBaseDecorator = new PathFollowerDecorator();
+    protected PathFollower m_PathFollowerDecorator;
+    
 	// </rtc-template>
 
 	/**
@@ -659,7 +662,7 @@ public class NavigationManagerImpl extends DataFlowComponentBase {
 																		// with
 																		// Mapper_MRPT?
 			RETURN_VALUE retval;
-			retval = this.m_pathFollowerBase._ptr().followPath(path);
+			retval = this.m_PathFollowerBaseDecorator.followPath(path);
 			if (retval == RETURN_VALUE.RETVAL_OK) {
 				logger.info("SUCCESS: FOLLOW SUCCESS");
 				return;
@@ -682,5 +685,5 @@ public class NavigationManagerImpl extends DataFlowComponentBase {
 	protected void refreshPath(Path2D path){
 		//please implement refleshment algorithm
 		//path = this.planPath(param);
-	}
+	}	
 }
