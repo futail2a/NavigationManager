@@ -679,4 +679,8 @@ public class NavigationManagerImpl extends DataFlowComponentBase {
 		}
 	}
 	
+	protected void refreshPath(Path2D path){
+		//please implement refleshment algorithm
+		//path = this.planPath(param);
+	}
 }
