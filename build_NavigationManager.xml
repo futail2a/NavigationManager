@@ -16,7 +16,7 @@
 	</target>
 
 	<target name="idlcompile"  depends="mkdir">
-		<exec executable="${java.home}/../jdk1.7.0_17/bin/idlj">
+		<exec executable="${java.home}/../jdk1.8.0_20/bin/idlj">
 			<arg line="-td 'src' -i 'idl' -fall 'idl/MobileRobot.idl'"/>
 		</exec>
 	</target>
