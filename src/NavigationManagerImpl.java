@@ -683,7 +683,7 @@ public class NavigationManagerImpl extends DataFlowComponentBase {
 	}
 	
 	public void refreshPath(Path2D path){
-		System.out.println("refreshing path data..");
+		System.out.println("refreshing path data");
 		app.planPath();
 		path = app.dataContainer.getPath();
 	}	

@@ -22,15 +22,20 @@ public class PathFollowerDecorator extends CorbaConsumer<PathFollower>{
         this.impl = impl;
 	}
 	public RTC.RETURN_VALUE followPath(RTC.Path2D path) {
-		RTC.RETURN_VALUE ret;
+		RTC.RETURN_VALUE ret = RTC.RETURN_VALUE.RETVAL_OK;
         System.out.println("Decorated followPath called");
-    	m_PathFollowerBase.setObject(this.m_objref);
+        
+    	m_PathFollowerBase.setObject(this.m_objref);    	
     	ret = this.m_PathFollowerBase._ptr().followPath(path);
-        while(ret != RTC.RETURN_VALUE.RETVAL_OK){
+    	
+    	//repeat only once
+    	//should the existence of SimplePathFollower be checked ?
+        if(ret != RTC.RETURN_VALUE.RETVAL_OK){
         	this.impl.refreshPath(path);
-            System.out.println("Decorated followPath called");
         	ret = this.m_PathFollowerBase._ptr().followPath(path);
         }
+        
+        System.out.println(ret);
     	return ret;
     }
 
