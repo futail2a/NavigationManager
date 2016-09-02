@@ -28,6 +28,7 @@ public class PathFollowerDecorator extends CorbaConsumer<PathFollower>{
     	ret = this.m_PathFollowerBase._ptr().followPath(path);
         while(ret != RTC.RETURN_VALUE.RETVAL_OK){
         	this.impl.refreshPath(path);
+        	ret = this.m_PathFollowerBase._ptr().followPath(path);
         }
     	return ret;
     }
