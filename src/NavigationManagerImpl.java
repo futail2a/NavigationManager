@@ -685,5 +685,6 @@ public class NavigationManagerImpl extends DataFlowComponentBase {
 	public void refreshPath(Path2D path){
 		//please implement refleshment algorithm
 		//path = this.planPath(param);
+		System.out.println("refreshing path data..");
 	}	
 }
