@@ -43,8 +43,8 @@ public class PathFollowerDecorator extends CorbaConsumer<PathFollower>{
     	
     	ret = callFollowPath(path);
     	
-    	//repeat only once
-        if(ret != RTC.RETURN_VALUE.RETVAL_OK){
+    	//at-least once semantics
+        while(ret != RTC.RETURN_VALUE.RETVAL_OK){
         	this.impl.refreshPath(path);
         	callFollowPath(path);	
         }
