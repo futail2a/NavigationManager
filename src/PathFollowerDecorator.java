@@ -21,18 +21,32 @@ public class PathFollowerDecorator extends CorbaConsumer<PathFollower>{
         this.m_PathFollowerBase = new CorbaConsumer<PathFollower>(PathFollower.class);
         this.impl = impl;
 	}
+	
+	public RTC.RETURN_VALUE callFollowPath(RTC.Path2D path){
+		RTC.RETURN_VALUE ret = RTC.RETURN_VALUE.RETVAL_OK;
+
+    	try{
+        	m_PathFollowerBase.setObject(this.m_objref);
+        	ret = this.m_PathFollowerBase._ptr().followPath(path);
+    	 }catch (org.omg.CORBA.SystemException e){
+         	System.out.println("Not connected port");
+    	 }
+    	return ret;
+	}
+	
 	public RTC.RETURN_VALUE followPath(RTC.Path2D path) {
 		RTC.RETURN_VALUE ret = RTC.RETURN_VALUE.RETVAL_OK;
+		
         System.out.println("Decorated followPath called");
         
-    	m_PathFollowerBase.setObject(this.m_objref);    	
-    	ret = this.m_PathFollowerBase._ptr().followPath(path);
+    	m_PathFollowerBase.setObject(this.m_objref);
+    	
+    	ret = callFollowPath(path);
     	
     	//repeat only once
-    	//should the existence of SimplePathFollower be checked ?
         if(ret != RTC.RETURN_VALUE.RETVAL_OK){
         	this.impl.refreshPath(path);
-        	ret = this.m_PathFollowerBase._ptr().followPath(path);
+        	callFollowPath(path);	
         }
         
         System.out.println(ret);
