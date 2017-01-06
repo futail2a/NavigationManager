@@ -136,10 +136,10 @@ public class NavigationManagerImpl extends DataFlowComponentBase {
 		m_pathPlannerPort.registerConsumer("PathPlanner", "RTC::PathPlanner",
 				m_pathPlannerBase);
 		m_pathFollowerPort.registerConsumer("PathFollower",
-				"RTC::PathFollower", m_PathFollowerBaseDecorator);
+				"RTC::PathFollower", m_pathFollowerBase);
 		
 		ConnectionCallback call;
-		call = new RequestCallback(m_PathFollowerBaseDecorator);
+		call = new RequestCallback();
 		m_pathFollowerPort.setOnConnected(call);
 		
 		ConnectionCallback discall;
@@ -515,15 +515,12 @@ public class NavigationManagerImpl extends DataFlowComponentBase {
 	 * !
 	 */
 	protected PathPlanner m_pathPlanner;
-	//protected CorbaConsumer<PathFollower> m_pathFollowerBase = new CorbaConsumer<PathFollower>(
-	//		PathFollower.class);
+	protected CorbaConsumer<PathFollower> m_pathFollowerBase = new CorbaConsumer<PathFollower>(
+			PathFollower.class);
 	/*
 	 * !
 	 */
-	//protected PathFollower m_pathFollower;
-
-    protected PathFollowerDecorator m_PathFollowerBaseDecorator = new PathFollowerDecorator(this);
-    protected PathFollower m_PathFollowerDecorator;
+	protected PathFollower m_pathFollower;
     
 	// </rtc-template>
 
@@ -672,7 +669,7 @@ public class NavigationManagerImpl extends DataFlowComponentBase {
 																		// with
 																		// Mapper_MRPT?
 			RETURN_VALUE retval;
-			retval = this.m_PathFollowerBaseDecorator.followPath(path);
+			retval = this.m_pathFollowerBase._ptr().followPath(path);
 			if (retval == RETURN_VALUE.RETVAL_OK) {
 				logger.info("SUCCESS: FOLLOW SUCCESS");
 				return;
@@ -706,11 +703,6 @@ public class NavigationManagerImpl extends DataFlowComponentBase {
 	}
 	
 	public class RequestCallback implements ConnectionCallback{
-		private PathFollowerDecorator m_port;
-		RequestCallback(PathFollowerDecorator port){
-			m_port = port;
-		}
-		
 		@Override
 		public void run(ConnectorProfileHolder arg0) {
 			if(isDisconnected == true){
