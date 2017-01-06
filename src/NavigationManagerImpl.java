@@ -51,7 +51,6 @@ import jp.go.aist.rtm.RTC.port.ConnectionCallback;
  *
  */
 public class NavigationManagerImpl extends DataFlowComponentBase {
-    private boolean isDisconnected = false;
 	//private MapperViewerFrame frame;
 
 	private Application app;
@@ -97,7 +96,8 @@ public class NavigationManagerImpl extends DataFlowComponentBase {
 		m_mapperServicePort = new CorbaPort("mapperService");
 		m_mapServerPort = new CorbaPort("mapServer");
 		m_pathPlannerPort = new CorbaPort("pathPlanner");
-		m_pathFollowerPort = new CorbaPort("pathFollower");
+		//m_pathFollowerPort = new CorbaPort("pathFollower");
+		m_pathFollowerDecoratorPort = new PathFollowerPortDecorator("pathFollower", this);
 		// </rtc-template>
 
 		System.out.println("Object created.");
@@ -135,22 +135,14 @@ public class NavigationManagerImpl extends DataFlowComponentBase {
 				m_OGMapServerBase);
 		m_pathPlannerPort.registerConsumer("PathPlanner", "RTC::PathPlanner",
 				m_pathPlannerBase);
-		m_pathFollowerPort.registerConsumer("PathFollower",
+		m_pathFollowerDecoratorPort.registerConsumer("PathFollower",
 				"RTC::PathFollower", m_pathFollowerBase);
-		
-		ConnectionCallback call;
-		call = new RequestCallback();
-		m_pathFollowerPort.setOnConnected(call);
-		
-		ConnectionCallback discall;
-		discall = new DisconnectedCallback();
-		m_pathFollowerPort.setOnDisconnected(discall);
 		
 		// Set CORBA Service Ports
 		addPort(m_mapperServicePort);
 		addPort(m_mapServerPort);
 		addPort(m_pathPlannerPort);
-		addPort(m_pathFollowerPort);
+		addPort(m_pathFollowerDecoratorPort);
 
 		// </rtc-template>
 		bindParameter("debug", m_debug, "0");
@@ -487,7 +479,8 @@ public class NavigationManagerImpl extends DataFlowComponentBase {
 	 * !
 	 */
 	protected CorbaPort m_pathFollowerPort;
-
+	protected CorbaPort m_pathFollowerDecoratorPort;
+	
 	// </rtc-template>
 
 	// Service declaration
@@ -664,7 +657,7 @@ public class NavigationManagerImpl extends DataFlowComponentBase {
 	private void follow() {
 		Path2D path = followingTargetPath;
 		logger.entering("MapperViewerImpl", "followPath()");
-		if (m_pathFollowerPort.get_connector_profiles().length != 0) {// dose it
+		if (m_pathFollowerDecoratorPort.get_connector_profiles().length != 0) {// dose it
 																		// connected
 																		// with
 																		// Mapper_MRPT?
@@ -695,23 +688,4 @@ public class NavigationManagerImpl extends DataFlowComponentBase {
 		path = app.dataContainer.getPath();
 	}
 	
-	public class DisconnectedCallback implements ConnectionCallback{
-		@Override
-		public void run(ConnectorProfileHolder arg0) {
-			isDisconnected = true;
-		}
-	}
-	
-	public class RequestCallback implements ConnectionCallback{
-		@Override
-		public void run(ConnectorProfileHolder arg0) {
-			if(isDisconnected == true){
-		        System.out.println("RequestCallback");
-		        refreshPath(followingTargetPath);
-		        followPath(followingTargetPath);				
-			}
-			isDisconnected = false;
-		}
-		
-	};	
 }

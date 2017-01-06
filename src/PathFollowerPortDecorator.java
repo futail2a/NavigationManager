@@ -1,5 +1,9 @@
 // -*-Java-*-
+import jp.go.aist.rtm.RTC.port.ConnectionCallback;
 import jp.go.aist.rtm.RTC.port.CorbaConsumer;
+import jp.go.aist.rtm.RTC.port.CorbaConsumerBase;
+import jp.go.aist.rtm.RTC.port.CorbaPort;
+import RTC.ConnectorProfileHolder;
 import RTC.PathFollower;
 /*!
  * @file  PathFollowerSVC_impl.java
@@ -11,53 +15,68 @@ import RTC.PathFollowerPOA;
  * @class PathFollowerSVC_impl
  * Example class implementing IDL interface RTC::PathFollower
  */
-public class PathFollowerDecorator extends CorbaConsumer<PathFollower>{
-	
-	private CorbaConsumer<PathFollower> m_PathFollowerBase;
-	private NavigationManagerImpl impl;
-	private RTC.RETURN_VALUE ret = RTC.RETURN_VALUE.RETVAL_UNKNOWN_ERROR;
-	
-	public PathFollowerDecorator(NavigationManagerImpl impl){
-        System.out.println("Decorated Constructor called");
-        this.m_PathFollowerBase = new CorbaConsumer<PathFollower>(PathFollower.class);
-        this.impl = impl;
-	}
-	
-	public RTC.RETURN_VALUE callFollowPath(RTC.Path2D path){
-    	try{
-        	m_PathFollowerBase.setObject(this.m_objref);
-        	ret = this.m_PathFollowerBase._ptr().followPath(path);
-    	 }catch (org.omg.CORBA.SystemException e){
-         	System.out.println("Not connected port");
-    	 }
-    	return ret;
-	}
-	
-	public RTC.RETURN_VALUE followPath(RTC.Path2D path) {
-        System.out.println("Decorated followPath called");        
+public class PathFollowerPortDecorator extends CorbaPort{
+    protected boolean isDisconnected = false;
+    protected NavigationManagerImpl m_impl;
+    protected RTC.Path2D m_targetPath;
+    protected CorbaConsumer<PathFollower> m_portbase;
+    
+	public PathFollowerPortDecorator(String arg0, NavigationManagerImpl impl) {
+		super(arg0);
 		
-    	m_PathFollowerBase.setObject(this.m_objref);
-    	ret = callFollowPath(path);
-    	
-    	//at-least once semantics
-        while(ret != RTC.RETURN_VALUE.RETVAL_OK){
-        	this.impl.refreshPath(path);
-        	callFollowPath(path);
-        }
-        
-        System.out.println("RETURN_VALUE = RETVAL_OK");
-    	return  RTC.RETURN_VALUE.RETVAL_OK;
-    }
+		m_impl = impl;		
+		ConnectionCallback call;
+		call = new RequestCallback();
+		this.setOnConnected(call);
+		
+		ConnectionCallback discall;
+		discall = new DisconnectedCallback();
+		this.setOnDisconnected(discall);
+	}
+    
+	@SuppressWarnings("unchecked")
+	@Override
+	public boolean registerConsumer(java.lang.String instance_name, java.lang.String type_name, CorbaConsumerBase consumer){
+		m_portbase = (CorbaConsumer<PathFollower>) consumer;		
+		return super.registerConsumer(instance_name, type_name, consumer);
+	}
+	
+	public class DisconnectedCallback implements ConnectionCallback{
+		@Override
+		public void run(ConnectorProfileHolder arg0) {
+			isDisconnected = true;
+		}
+	};
+	
+	public class RequestCallback implements ConnectionCallback{
+		private Thread requesting;
+		
+		@Override
+		public void run(ConnectorProfileHolder arg0) {
+			if(isDisconnected == true){
+		        System.out.println("RequestCallback");
+		        
+		        m_impl.refreshPath(m_targetPath);
+		        
+		        requesting = new Thread(new Runnable() {
+					@Override
+					public void run() {
+				        System.out.println("Follow Path");
+				        try{
+				        	m_portbase._ptr().followPath(m_targetPath);
+				        }catch(org.omg.CORBA.SystemException e){
+				         	System.out.println("Not connected port");
+				   	 	}
+					}
+				});
 
-    public RTC.RETURN_VALUE getState(RTC.FOLLOWER_STATEHolder state) {
-        System.out.println("Decorated getState called");
-    	m_PathFollowerBase.setObject(this.m_objref);
-        return this.m_PathFollowerBase._ptr().getState(state);
-    }
+		        requesting.start();
+	
+	
+		        
+			}
+			isDisconnected = false;
+		}
+	};
 
-    public RTC.RETURN_VALUE followPathNonBlock(RTC.Path2D path) {
-        System.out.println("Decorated followPathNoneBlack called");
-    	m_PathFollowerBase.setObject(this.m_objref);
-        return this.m_PathFollowerBase._ptr().followPathNonBlock(path);
-    }
 }
