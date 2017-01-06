@@ -15,6 +15,7 @@ public class PathFollowerDecorator extends CorbaConsumer<PathFollower>{
 	
 	private CorbaConsumer<PathFollower> m_PathFollowerBase;
 	private NavigationManagerImpl impl;
+	private RTC.RETURN_VALUE ret = RTC.RETURN_VALUE.RETVAL_UNKNOWN_ERROR;
 	
 	public PathFollowerDecorator(NavigationManagerImpl impl){
         System.out.println("Decorated Constructor called");
@@ -23,8 +24,6 @@ public class PathFollowerDecorator extends CorbaConsumer<PathFollower>{
 	}
 	
 	public RTC.RETURN_VALUE callFollowPath(RTC.Path2D path){
-		RTC.RETURN_VALUE ret = RTC.RETURN_VALUE.RETVAL_OK;
-
     	try{
         	m_PathFollowerBase.setObject(this.m_objref);
         	ret = this.m_PathFollowerBase._ptr().followPath(path);
@@ -33,14 +32,23 @@ public class PathFollowerDecorator extends CorbaConsumer<PathFollower>{
     	 }
     	return ret;
 	}
+    
+	public RTC.Path2D refreshPath(RTC.Path2D path){
+    	this.impl.refreshPath(path);
+    	m_PathFollowerBase.releaseObject();
+    	return path;
+	}
 	
 	public RTC.RETURN_VALUE followPath(RTC.Path2D path) {
         System.out.println("Decorated followPath called");        
+		
     	m_PathFollowerBase.setObject(this.m_objref);
+    	ret = callFollowPath(path);
     	
     	//at-least once semantics
-        while(callFollowPath(path) != RTC.RETURN_VALUE.RETVAL_OK){
+        while(ret != RTC.RETURN_VALUE.RETVAL_OK){
         	this.impl.refreshPath(path);
+        	callFollowPath(path);
         }
         
         System.out.println("RETURN_VALUE = RETVAL_OK");

@@ -19,6 +19,7 @@ import jp.go.aist.rtm.RTC.util.DataRef;
 import jp.go.aist.rtm.RTC.util.DoubleHolder;
 import jp.go.aist.rtm.RTC.util.IntegerHolder;
 import RTC.CameraImage;
+import RTC.ConnectorProfileHolder;
 import RTC.MAPPER_STATE;
 import RTC.MAPPER_STATEHolder;
 import RTC.OGMap;
@@ -42,6 +43,7 @@ import RTC.TimedVelocity2D;
 import RTC.Velocity2D;
 import RTC.Waypoint2D;
 import application.NavigationLogger;
+import jp.go.aist.rtm.RTC.port.ConnectionCallback;
 
 /*!
  * @class MapperViewerImpl
@@ -49,7 +51,7 @@ import application.NavigationLogger;
  *
  */
 public class NavigationManagerImpl extends DataFlowComponentBase {
-
+    private boolean isDisconnected = false;
 	//private MapperViewerFrame frame;
 
 	private Application app;
@@ -135,7 +137,15 @@ public class NavigationManagerImpl extends DataFlowComponentBase {
 				m_pathPlannerBase);
 		m_pathFollowerPort.registerConsumer("PathFollower",
 				"RTC::PathFollower", m_PathFollowerBaseDecorator);
-
+		
+		ConnectionCallback call;
+		call = new RequestCallback(m_PathFollowerBaseDecorator);
+		m_pathFollowerPort.setOnConnected(call);
+		
+		ConnectionCallback discall;
+		discall = new DisconnectedCallback();
+		m_pathFollowerPort.setOnDisconnected(discall);
+		
 		// Set CORBA Service Ports
 		addPort(m_mapperServicePort);
 		addPort(m_mapServerPort);
@@ -686,5 +696,29 @@ public class NavigationManagerImpl extends DataFlowComponentBase {
 		System.out.println("refreshing path data");
 		app.planPath();
 		path = app.dataContainer.getPath();
-	}	
+	}
+	
+	public class DisconnectedCallback implements ConnectionCallback{
+		@Override
+		public void run(ConnectorProfileHolder arg0) {
+			isDisconnected = true;
+		}
+	}
+	
+	public class RequestCallback implements ConnectionCallback{
+		private PathFollowerDecorator m_port;
+		RequestCallback(PathFollowerDecorator port){
+			m_port = port;
+		}
+		
+		@Override
+		public void run(ConnectorProfileHolder arg0) {
+			if(isDisconnected == true){
+		        System.out.println("RequestCallback");        
+				m_port.callFollowPath(m_port.refreshPath(followingTargetPath));				
+			}
+			isDisconnected = false;
+		}
+		
+	};	
 }
