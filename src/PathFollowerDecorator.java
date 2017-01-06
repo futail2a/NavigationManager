@@ -32,12 +32,6 @@ public class PathFollowerDecorator extends CorbaConsumer<PathFollower>{
     	 }
     	return ret;
 	}
-    
-	public RTC.Path2D refreshPath(RTC.Path2D path){
-    	this.impl.refreshPath(path);
-    	m_PathFollowerBase.releaseObject();
-    	return path;
-	}
 	
 	public RTC.RETURN_VALUE followPath(RTC.Path2D path) {
         System.out.println("Decorated followPath called");        
