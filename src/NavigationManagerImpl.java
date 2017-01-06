@@ -715,7 +715,7 @@ public class NavigationManagerImpl extends DataFlowComponentBase {
 		public void run(ConnectorProfileHolder arg0) {
 			if(isDisconnected == true){
 		        System.out.println("RequestCallback");        
-				m_port.callFollowPath(m_port.refreshPath(followingTargetPath));				
+		        followPath(m_port.refreshPath(followingTargetPath));				
 			}
 			isDisconnected = false;
 		}
