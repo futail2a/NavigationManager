@@ -21,17 +21,19 @@ public class PathFollowerPortDecorator extends CorbaPort{
     protected RTC.Path2D m_targetPath;
     protected CorbaConsumer<PathFollower> m_portbase;
     
-	public PathFollowerPortDecorator(String arg0, NavigationManagerImpl impl) {
+	public PathFollowerPortDecorator(String arg0, NavigationManagerImpl impl) {	
 		super(arg0);
 		
-		m_impl = impl;		
+		m_impl = impl;
+		
+		//add callback functions
 		ConnectionCallback call;
 		call = new RequestCallback();
-		this.setOnConnected(call);
+		super.setOnConnected(call);
 		
 		ConnectionCallback discall;
 		discall = new DisconnectedCallback();
-		this.setOnDisconnected(discall);
+		super.setOnDisconnected(discall);
 	}
     
 	@SuppressWarnings("unchecked")
@@ -49,16 +51,17 @@ public class PathFollowerPortDecorator extends CorbaPort{
 	};
 	
 	public class RequestCallback implements ConnectionCallback{
-		private Thread requesting;
+		Thread requesting;
 		
 		@Override
 		public void run(ConnectorProfileHolder arg0) {
 			if(isDisconnected == true){
 		        System.out.println("RequestCallback");
 		        
-		        m_impl.refreshPath(m_targetPath);
+		        m_targetPath = m_impl.refreshPath();		        
 		        
-		        requesting = new Thread(new Runnable() {
+		    	requesting = new Thread(new Runnable() {
+
 					@Override
 					public void run() {
 				        System.out.println("Follow Path");
@@ -68,12 +71,11 @@ public class PathFollowerPortDecorator extends CorbaPort{
 				         	System.out.println("Not connected port");
 				   	 	}
 					}
+
 				});
 
-		        requesting.start();
-	
-	
-		        
+				requesting.start();
+		        							        
 			}
 			isDisconnected = false;
 		}
