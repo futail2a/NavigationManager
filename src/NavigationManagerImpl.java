@@ -51,6 +51,7 @@ import jp.go.aist.rtm.RTC.port.ConnectionCallback;
  *
  */
 public class NavigationManagerImpl extends DataFlowComponentBase {
+    private boolean isDisconnected = false;
 	//private MapperViewerFrame frame;
 
 	private Application app;
@@ -96,8 +97,7 @@ public class NavigationManagerImpl extends DataFlowComponentBase {
 		m_mapperServicePort = new CorbaPort("mapperService");
 		m_mapServerPort = new CorbaPort("mapServer");
 		m_pathPlannerPort = new CorbaPort("pathPlanner");
-		//m_pathFollowerPort = new CorbaPort("pathFollower");
-		m_pathFollowerDecoratorPort = new PathFollowerPortDecorator("pathFollower", this);
+		m_pathFollowerPort = new CorbaPort("pathFollower");
 		// </rtc-template>
 
 		System.out.println("Object created.");
@@ -135,14 +135,22 @@ public class NavigationManagerImpl extends DataFlowComponentBase {
 				m_OGMapServerBase);
 		m_pathPlannerPort.registerConsumer("PathPlanner", "RTC::PathPlanner",
 				m_pathPlannerBase);
-		m_pathFollowerDecoratorPort.registerConsumer("PathFollower",
-				"RTC::PathFollower", m_pathFollowerBase);
+		m_pathFollowerPort.registerConsumer("PathFollower",
+				"RTC::PathFollower", m_PathFollowerBaseDecorator);
+		
+		ConnectionCallback call;
+		call = new RequestCallback(m_PathFollowerBaseDecorator);
+		m_pathFollowerPort.setOnConnected(call);
+		
+		ConnectionCallback discall;
+		discall = new DisconnectedCallback();
+		m_pathFollowerPort.setOnDisconnected(discall);
 		
 		// Set CORBA Service Ports
 		addPort(m_mapperServicePort);
 		addPort(m_mapServerPort);
 		addPort(m_pathPlannerPort);
-		addPort(m_pathFollowerDecoratorPort);
+		addPort(m_pathFollowerPort);
 
 		// </rtc-template>
 		bindParameter("debug", m_debug, "0");
@@ -479,8 +487,7 @@ public class NavigationManagerImpl extends DataFlowComponentBase {
 	 * !
 	 */
 	protected CorbaPort m_pathFollowerPort;
-	protected CorbaPort m_pathFollowerDecoratorPort;
-	
+
 	// </rtc-template>
 
 	// Service declaration
@@ -508,12 +515,15 @@ public class NavigationManagerImpl extends DataFlowComponentBase {
 	 * !
 	 */
 	protected PathPlanner m_pathPlanner;
-	protected CorbaConsumer<PathFollower> m_pathFollowerBase = new CorbaConsumer<PathFollower>(
-			PathFollower.class);
+	//protected CorbaConsumer<PathFollower> m_pathFollowerBase = new CorbaConsumer<PathFollower>(
+	//		PathFollower.class);
 	/*
 	 * !
 	 */
-	protected PathFollower m_pathFollower;
+	//protected PathFollower m_pathFollower;
+
+    protected PathFollowerDecorator m_PathFollowerBaseDecorator = new PathFollowerDecorator(this);
+    protected PathFollower m_PathFollowerDecorator;
     
 	// </rtc-template>
 
@@ -657,12 +667,12 @@ public class NavigationManagerImpl extends DataFlowComponentBase {
 	private void follow() {
 		Path2D path = followingTargetPath;
 		logger.entering("MapperViewerImpl", "followPath()");
-		if (m_pathFollowerDecoratorPort.get_connector_profiles().length != 0) {// dose it
+		if (m_pathFollowerPort.get_connector_profiles().length != 0) {// dose it
 																		// connected
 																		// with
 																		// Mapper_MRPT?
 			RETURN_VALUE retval;
-			retval = this.m_pathFollowerBase._ptr().followPath(path);
+			retval = this.m_PathFollowerBaseDecorator.followPath(path);
 			if (retval == RETURN_VALUE.RETVAL_OK) {
 				logger.info("SUCCESS: FOLLOW SUCCESS");
 				return;
@@ -682,10 +692,34 @@ public class NavigationManagerImpl extends DataFlowComponentBase {
 		}
 	}
 	
-	public Path2D refreshPath(){
+	public void refreshPath(Path2D path){
 		System.out.println("refreshing path data");
 		app.planPath();
-		return app.dataContainer.getPath();
+		path = app.dataContainer.getPath();
 	}
 	
+	public class DisconnectedCallback implements ConnectionCallback{
+		@Override
+		public void run(ConnectorProfileHolder arg0) {
+			isDisconnected = true;
+		}
+	}
+	
+	public class RequestCallback implements ConnectionCallback{
+		private PathFollowerDecorator m_port;
+		RequestCallback(PathFollowerDecorator port){
+			m_port = port;
+		}
+		
+		@Override
+		public void run(ConnectorProfileHolder arg0) {
+			if(isDisconnected == true){
+		        System.out.println("RequestCallback");
+		        refreshPath(followingTargetPath);
+		        followPath(followingTargetPath);				
+			}
+			isDisconnected = false;
+		}
+		
+	};	
 }
