@@ -2,6 +2,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PipedWriter;
 import java.io.PrintWriter;
 import java.util.logging.Logger;
 
@@ -19,6 +20,11 @@ import application.DataContainer;
 import application.NavigationLogger;
 import application.PathUtil;
 import application.VirtualJoystickContainer;
+
+import jp.go.aist.rtm.RTC.CorbaNaming;
+import jp.go.aist.rtm.RTC.port.CorbaConsumer;
+import jp.go.aist.rtm.RTC.util.ORBUtil;
+import RTC.RTObject;
 
 public class Application implements Runnable {
 
@@ -237,7 +243,32 @@ public class Application implements Runnable {
 		logger.info("Start Following...");
 		rtc.followPath(dataContainer.getPath());
 		logger.info("Following End");
+		PipedWriter Out = new PipedWriter();
+		Out.write("rtdeact localhost/SimplePathFollower01.rtc");
+		Out.write("rtdeact localhost/AutonomousVehicleModelRTC0.rtc");
+		Out.write("rtdeact localhost/SimplePathFollower02.rtc");
+		Out.close();
+		deactThis();
 	}
+	
+    public void deactThis() {
+    	try {
+    		//CORBA ORBオブジェクトを生成 
+    		org.omg.CORBA.ORB corbaORB = ORBUtil.getOrb(args);
+    		CorbaNaming corbaNaming = new CorbaNaming(corbaORB, "localhost:2809");
+ 
+    		org.omg.CORBA.Object object = corbaNaming.resolve("local/NavigationManager0.rtc");
+    		CorbaConsumer<RTObject> periodicConsoleOut0 = new CorbaConsumer<RTObject>(RTObject.class);
+    		periodicConsoleOut0.setObject(object);
+ 
+    		RTC.ExecutionContext[] executionContextList = periodicConsoleOut0._ptr().get_owned_contexts();
+    		executionContextList[0].deactivate_component(periodicConsoleOut0._ptr());
+    	} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    }
+	
 
 	public String getVersion() {
 		return this.rtc.get_component_profile().version;
