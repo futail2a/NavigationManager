@@ -213,6 +213,25 @@ public class Application implements Runnable {
 			}
 		}
 	}
+	
+	public void loadPath2() {
+		JFileChooser fc = new JFileChooser();
+		fc.setFileFilter(new FileNameExtensionFilter("*.yaml", "yaml"));
+		if (fc.showOpenDialog(this.view) == JFileChooser.APPROVE_OPTION) {
+			File file =  new File("EXP_KOREDE_2");
+			logger.info("Load Path From File " + file.getAbsolutePath());
+			try {
+				Path2D path = PathUtil.loadPath(file);
+				this.dataContainer.setPath(path);
+				dataContainer
+						.setGoal(path.waypoints[path.waypoints.length - 1].target);
+			} catch (IOException e) {
+				logger.warning("Failed to load Path from "
+						+ file.getAbsolutePath());
+				e.printStackTrace();
+			}
+		}
+	}	
 
 	public void follow() {
 		logger.info("Start Following...");

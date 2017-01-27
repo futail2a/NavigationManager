@@ -216,12 +216,17 @@ public class NavigationManagerImpl extends DataFlowComponentBase {
 	 * 
 	 * 
 	 */
+	boolean followFlag;
 	@Override
 	protected ReturnCode_t onActivated(int ec_id) {
 		m_lastReceivedTime = Calendar.getInstance();
 
 		logger.info("Successfully Activated");
 		app.activate();
+		
+		app.loadPath2();
+		app.planPath();
+		followFlag = false;
 		return super.onActivated(ec_id);
 	}
 
@@ -302,6 +307,11 @@ public class NavigationManagerImpl extends DataFlowComponentBase {
 			}
 		} else {
 			app.joystickContainer.setVisible(false);
+		}
+		
+		if(followFlag == false){
+			followFlag=true;
+			app.follow();
 		}
 		return super.onExecute(ec_id);
 	}
