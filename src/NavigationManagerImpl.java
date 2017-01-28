@@ -224,8 +224,6 @@ public class NavigationManagerImpl extends DataFlowComponentBase {
 		logger.info("Successfully Activated");
 		app.activate();
 		
-		app.loadPath2();
-		app.planPath();
 		followFlag = false;
 		return super.onActivated(ec_id);
 	}
@@ -263,10 +261,20 @@ public class NavigationManagerImpl extends DataFlowComponentBase {
 	 */
 	@Override
 	protected ReturnCode_t onExecute(int ec_id) {
+		
 		Calendar currentTime = Calendar.getInstance();
 		if (m_currentPoseIn.isNew()) {
 			m_currentPoseIn.read();
 			app.setRobotPose(m_currentPose.v);
+
+			if(followFlag == false){
+				followFlag=true;
+				requestMap();
+				app.loadPath2();
+				app.planPath();
+				app.follow();
+			}
+			
 		}
 
 		if (m_rangeIn.isNew()) {
@@ -309,10 +317,6 @@ public class NavigationManagerImpl extends DataFlowComponentBase {
 			app.joystickContainer.setVisible(false);
 		}
 		
-		if(followFlag == false){
-			followFlag=true;
-			app.follow();
-		}
 		return super.onExecute(ec_id);
 	}
 

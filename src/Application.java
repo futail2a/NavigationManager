@@ -222,11 +222,11 @@ public class Application implements Runnable {
 	}
 	
 	public void loadPath2() {
-		JFileChooser fc = new JFileChooser();
-		fc.setFileFilter(new FileNameExtensionFilter("*.yaml", "yaml"));
-		if (fc.showOpenDialog(this.view) == JFileChooser.APPROVE_OPTION) {
-			File file =  new File("EXP_KOREDE_2");
-			logger.info("Load Path From File " + file.getAbsolutePath());
+		//JFileChooser fc = new JFileChooser();
+		//fc.setFileFilter(new FileNameExtensionFilter("*.yaml", "yaml"));
+		//if (fc.showOpenDialog(this.view) == JFileChooser.APPROVE_OPTION) {
+			File file =  new File("C:\\Users\\ogata\\Desktop\\EXP_PATH_KOREDE2.yaml");
+			//System.out.print("Load Path From File " + file.getAbsolutePath());
 			try {
 				Path2D path = PathUtil.loadPath(file);
 				this.dataContainer.setPath(path);
@@ -237,7 +237,7 @@ public class Application implements Runnable {
 						+ file.getAbsolutePath());
 				e.printStackTrace();
 			}
-		}
+		//}
 	}	
 
 	public void follow() {
@@ -245,16 +245,18 @@ public class Application implements Runnable {
 		rtc.followPath(dataContainer.getPath());
 		logger.info("Following End");
 		PipedWriter Out = new PipedWriter();
+		/*
 		try {
 			Out.write("rtdeact localhost/SimplePathFollower01.rtc");
-			Out.write("rtdeact localhost/AutonomousVehicleModelRTC0.rtc");
+			Out.write("rtdeact localhost/rausu.host_cxt/AutonomousVehicleModelRTC0.rtc");
 			Out.write("rtdeact localhost/SimplePathFollower02.rtc");
 			Out.close();
 		}catch(IOException ex) {
 	        ex.printStackTrace();
-	        System.out.println("ドライバクラスのロードに失敗しました");
+	        System.out.println("cannot deactivate");
 	    } 
 		deactThis();
+		*/
 	}
 	
     public void deactThis() {
