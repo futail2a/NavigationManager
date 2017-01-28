@@ -25,6 +25,7 @@ import jp.go.aist.rtm.RTC.CorbaNaming;
 import jp.go.aist.rtm.RTC.port.CorbaConsumer;
 import jp.go.aist.rtm.RTC.util.ORBUtil;
 import RTC.RTObject;
+import java.io.*;
 
 public class Application implements Runnable {
 
@@ -244,17 +245,21 @@ public class Application implements Runnable {
 		rtc.followPath(dataContainer.getPath());
 		logger.info("Following End");
 		PipedWriter Out = new PipedWriter();
-		Out.write("rtdeact localhost/SimplePathFollower01.rtc");
-		Out.write("rtdeact localhost/AutonomousVehicleModelRTC0.rtc");
-		Out.write("rtdeact localhost/SimplePathFollower02.rtc");
-		Out.close();
+		try {
+			Out.write("rtdeact localhost/SimplePathFollower01.rtc");
+			Out.write("rtdeact localhost/AutonomousVehicleModelRTC0.rtc");
+			Out.write("rtdeact localhost/SimplePathFollower02.rtc");
+			Out.close();
+		}catch(IOException ex) {
+	        ex.printStackTrace();
+	        System.out.println("ドライバクラスのロードに失敗しました");
+	    } 
 		deactThis();
 	}
 	
     public void deactThis() {
     	try {
-    		//CORBA ORBオブジェクトを生成 
-    		org.omg.CORBA.ORB corbaORB = ORBUtil.getOrb(args);
+    		org.omg.CORBA.ORB corbaORB = ORBUtil.getOrb();
     		CorbaNaming corbaNaming = new CorbaNaming(corbaORB, "localhost:2809");
  
     		org.omg.CORBA.Object object = corbaNaming.resolve("local/NavigationManager0.rtc");
